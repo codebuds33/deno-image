@@ -1,4 +1,4 @@
-# 1.1.0
+# 1.2.0
 
 Simple server that shows the server and client IP
 
@@ -25,3 +25,4 @@ kubectl expose deployment deno-webserver --port=80 --target-port=8080 --type=Nod
 ```shell
 curl http://192.168.49.2:32552/
 ```
+

@@ -37,7 +37,7 @@ async function serveHttp(conn: Deno.Conn) {
             "host",
         ) ?? "Unknown"
 
-        const logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - Client : ${client} | Server : ${netAddr} | URL : ${url}\n`
+        const logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
 
         await appendToFiles([appendingFile, emptyDirFile], logEntry)
 

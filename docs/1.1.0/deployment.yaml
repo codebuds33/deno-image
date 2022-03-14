@@ -11,7 +11,7 @@ metadata:
   namespace: default
 spec:
   progressDeadlineSeconds: 600
-  replicas: 1
+  replicas: 3
   revisionHistoryLimit: 10
   selector:
     matchLabels:
@@ -27,23 +27,17 @@ spec:
         app: deno-webserver
     spec:
       containers:
-      - image: codebuds/deno-webserver:latest
+      - image: codebuds/deno-webserver:1.1.0
         imagePullPolicy: Always
         name: deno-webserver
         resources: {}
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
-        volumeMounts:
-          - mountPath: /srv/app/emptyDir
-            name: empty-dir
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
-      volumes:
-        - name: empty-dir
-          emptyDir: {}
 status:
   availableReplicas: 1
   conditions:
