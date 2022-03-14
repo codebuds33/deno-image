@@ -24,11 +24,19 @@ async function serveHttp(conn: Deno.Conn) {
         if(url.toString().includes('favicon')) {
             return
         }
-        // The native HTTP server uses the web standard `Request` and `Response`
-        // objects.
 
         const localFilePath = './local/log.txt'
         const PVCFilePath = './pvc/log.txt'
+
+        await checkFilesExist([localFilePath, PVCFilePath])
+
+        if(url.toString().includes('clean-pvc')) {
+            Deno.writeFile(PVCFilePath, new Uint8Array())
+        }
+
+        if(url.toString().includes('clean-local')) {
+            Deno.writeFile(localFilePath, new Uint8Array())
+        }
 
         const appendingFile = await openAppendingFile(localFilePath)
         const PVCFile = await openAppendingFile(PVCFilePath)
@@ -47,9 +55,9 @@ async function serveHttp(conn: Deno.Conn) {
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
         <h3>Log</h3><br>
-         <b>PVC</b><br>
+         <b>PVC</b> <a href="/clean-pvc"><button>Clean</button></a><br>
         ${savedEmptyDir}
-        <b>Local</b><br>
+        <b>Local</b> <a href="/clean-local"><button>Clean</button></a><br>
         ${savedLocal}
         `;
         const bodyHTML = new TextEncoder().encode(body);
@@ -63,8 +71,13 @@ async function serveHttp(conn: Deno.Conn) {
     }
 }
 
+async function checkFilesExist(paths: any) {
+    for (const path of paths) {
+        ensureFileSync(path);
+    }
+}
+
 async function openAppendingFile(path: string) {
-    ensureFileSync(path);
     return await Deno.open(path, {create: true, append: true});
 }
 

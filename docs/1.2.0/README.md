@@ -26,4 +26,4 @@ kubectl expose deployment deno-webserver --port=80 --target-port=8080 --type=Nod
 curl http://192.168.49.2:32552/
 ```
 
-
+## Remove PVC
