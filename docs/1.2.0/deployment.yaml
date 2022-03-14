@@ -49,6 +49,22 @@ spec:
 ---
 
 apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: deno-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: standard
+  capacity:
+    storage: 3Gi
+  hostPath:
+    path: /data/deno-server/
+
+---
+
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: logs
