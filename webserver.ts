@@ -28,10 +28,10 @@ async function serveHttp(conn: Deno.Conn) {
         // objects.
 
         const localFilePath = './local/log.txt'
-        const emptyDirFilePath = './emptyDir/log.txt'
+        const PVCFilePath = './pvc/log.txt'
 
         const appendingFile = await openAppendingFile(localFilePath)
-        const emptyDirFile = await openAppendingFile(emptyDirFilePath)
+        const PVCFile = await openAppendingFile(PVCFilePath)
 
         const client = requestEvent.request.headers.get(
             "host",
@@ -39,10 +39,10 @@ async function serveHttp(conn: Deno.Conn) {
 
         const logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
 
-        await appendToFiles([appendingFile, emptyDirFile], logEntry)
+        await appendToFiles([appendingFile, PVCFile], logEntry)
 
         let savedLocal = await readLogFile(localFilePath)
-        let savedEmptyDir = await readLogFile(emptyDirFilePath)
+        let savedEmptyDir = await readLogFile(PVCFilePath)
 
         const body = `
         <b>Current</b>: ${logEntry}<br><br>

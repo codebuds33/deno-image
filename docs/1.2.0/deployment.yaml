@@ -34,32 +34,28 @@ spec:
         terminationMessagePath: /dev/termination-log
         terminationMessagePolicy: File
         volumeMounts:
-          - mountPath: /srv/app/emptyDir
-            name: empty-dir
+          - mountPath: /srv/app/pvc
+            name: logs
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
       terminationGracePeriodSeconds: 30
       volumes:
-        - name: empty-dir
-          emptyDir: {}
-status:
-  availableReplicas: 1
-  conditions:
-  - lastTransitionTime: "2022-03-13T17:52:08Z"
-    lastUpdateTime: "2022-03-13T17:52:08Z"
-    message: Deployment has minimum availability.
-    reason: MinimumReplicasAvailable
-    status: "True"
-    type: Available
-  - lastTransitionTime: "2022-03-13T17:52:00Z"
-    lastUpdateTime: "2022-03-14T10:54:14Z"
-    message: ReplicaSet "deno-webserver-7d4999f6cf" has successfully progressed.
-    reason: NewReplicaSetAvailable
-    status: "True"
-    type: Progressing
-  observedGeneration: 3
-  readyReplicas: 1
-  replicas: 3
-  updatedReplicas: 1
+        - name: logs
+          persistentVolumeClaim:
+            claimName: logs
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
