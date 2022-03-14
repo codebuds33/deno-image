@@ -6,4 +6,4 @@ WORKDIR /srv/app
 
 EXPOSE 8080
 
-CMD deno run --allow-run --allow-net webserver.ts
+CMD deno run --unstable --allow-run --allow-write --allow-read --allow-net webserver.ts
