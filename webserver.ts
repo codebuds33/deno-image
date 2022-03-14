@@ -47,9 +47,9 @@ async function serveHttp(conn: Deno.Conn) {
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
         <h3>Log</h3><br>
-         <b>EmptyDir</b><br>
+         <b>PVC</b><br>
         ${savedEmptyDir}
-        <b>Saved</b><br>
+        <b>Local</b><br>
         ${savedLocal}
         `;
         const bodyHTML = new TextEncoder().encode(body);
