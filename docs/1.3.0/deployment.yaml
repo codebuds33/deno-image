@@ -36,6 +36,11 @@ spec:
         volumeMounts:
           - mountPath: /srv/app/pvc
             name: logs
+      - image: mariadb:10.7
+        imagePullPolicy: Always
+        name: maria-db
+        resources: {}
+        
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
