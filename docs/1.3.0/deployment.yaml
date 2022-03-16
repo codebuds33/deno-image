@@ -28,7 +28,7 @@ spec:
     spec:
       containers:
       - image: codebuds/deno-webserver:1.3.0
-        imagePullPolicy: Never
+        imagePullPolicy: Always
         name: deno-webserver
         resources: {}
         terminationMessagePath: /dev/termination-log
