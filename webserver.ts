@@ -2,8 +2,10 @@ import {getNetworkAddr} from 'https://deno.land/x/local_ip/mod.ts';
 import {format} from "https://deno.land/std@0.91.0/datetime/mod.ts";
 import {readLines} from "https://deno.land/std/io/bufio.ts";
 import {ensureFileSync,} from "https://deno.land/std@0.78.0/fs/mod.ts";
+import {Client} from "https://deno.land/x/mysql/mod.ts";
 // Start listening on port 8080 of localhost.
 const server = Deno.listen({port: 8080});
+
 console.log(`HTTP webserver running.  Access it at:  http://localhost:8080/`);
 
 // Connections to the server will be yielded up as an async iterable.
@@ -14,6 +16,26 @@ for await (const conn of server) {
 }
 
 async function serveHttp(conn: Deno.Conn) {
+
+    const dbClient = await new Client().connect({
+        hostname: "maria-db",
+        username: "root",
+        db: "logs",
+        password: "asecret",
+    });
+
+    await dbClient.execute(`CREATE DATABASE IF NOT EXISTS logs`);
+    await dbClient.execute(`
+        CREATE TABLE IF NOT EXISTS entries
+        (
+            id         int(11)   NOT NULL AUTO_INCREMENT,
+            data       text      NOT NULL,
+            created_at timestamp not null default current_timestamp,
+            PRIMARY KEY (id)
+        ) ENGINE = InnoDB
+          DEFAULT CHARSET = utf8;
+    `);
+
     // This "upgrades" a network connection into an HTTP connection.
     const httpConn = Deno.serveHttp(conn);
     const netAddr = await getNetworkAddr();
@@ -21,7 +43,7 @@ async function serveHttp(conn: Deno.Conn) {
     // iterator from the HTTP connection.
     for await (const requestEvent of httpConn) {
         const url = new URL(requestEvent.request.url);
-        if(url.toString().includes('favicon')) {
+        if (url.toString().includes('favicon')) {
             return
         }
 
@@ -30,12 +52,16 @@ async function serveHttp(conn: Deno.Conn) {
 
         await checkFilesExist([localFilePath, PVCFilePath])
 
-        if(url.toString().includes('clean-pvc')) {
+        if (url.toString().includes('clean-pvc')) {
             Deno.writeFile(PVCFilePath, new Uint8Array())
         }
 
-        if(url.toString().includes('clean-local')) {
+        if (url.toString().includes('clean-local')) {
             Deno.writeFile(localFilePath, new Uint8Array())
+        }
+
+        if (url.toString().includes('clean-database')) {
+            await dbClient.execute(`delete from entries`);
         }
 
         const appendingFile = await openAppendingFile(localFilePath)
@@ -48,9 +74,21 @@ async function serveHttp(conn: Deno.Conn) {
         const logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
 
         await appendToFiles([appendingFile, PVCFile], logEntry)
+        await dbClient.execute(`INSERT INTO entries(data)
+                              values (?)`, [
+            logEntry,
+        ]);
 
         let savedLocal = await readLogFile(localFilePath)
         let savedEmptyDir = await readLogFile(PVCFilePath)
+        let dbEntries = await dbClient.query(`select *
+                                            from entries`);
+        console.log('kek', dbEntries)
+
+        let dbEntrieshtml = '';
+        for(const entry of dbEntries) {
+            dbEntrieshtml = `${dbEntrieshtml} <b>Id : </b> ${entry.id} <b>Data : </b> ${entry.data} <b>CreatedAt : </b> ${entry.created_at}<br>`
+        }
 
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
@@ -59,6 +97,8 @@ async function serveHttp(conn: Deno.Conn) {
         ${savedEmptyDir}
         <b>Local</b> <a href="/clean-local"><button>Clean</button></a><br>
         ${savedLocal}
+        <b>DataBase</b> <a href="/clean-database"><button>Clean</button></a><br>
+        ${dbEntrieshtml}
         `;
         const bodyHTML = new TextEncoder().encode(body);
         // The requestEvent's `.respondWith()` method is how we send the response

@@ -29,3 +29,7 @@ curl http://192.168.49.2:32552/
 ## MariaDB
 
 ### Add secrets to cluster
+
+```shell
+kubectl apply -f docs/1.3.0/mariadb-secret.yaml
+```
