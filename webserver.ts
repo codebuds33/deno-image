@@ -42,6 +42,13 @@ async function serveHttp(conn: Deno.Conn) {
     // Each request sent over the HTTP connection will be yielded as an async
     // iterator from the HTTP connection.
     for await (const requestEvent of httpConn) {
+
+
+        const pingSameResponse = Deno.run({cmd: ["ping", "same-namespace"]});
+        const pingOtherResponse = Deno.run({cmd: ["ping", "other-namespace"]});
+
+        console.log(pingSameResponse, pingOtherResponse)
+
         const url = new URL(requestEvent.request.url);
         if (url.toString().includes('favicon')) {
             return
@@ -60,8 +67,15 @@ async function serveHttp(conn: Deno.Conn) {
             Deno.writeFile(localFilePath, new Uint8Array())
         }
 
+        let isProbe = false
+
+        if (url.toString().includes('probe')) {
+            isProbe = true
+        }
+
         if (url.toString().includes('clean-database')) {
-            await dbClient.execute(`delete from entries`);
+            await dbClient.execute(`delete
+                                    from entries`);
         }
 
         const appendingFile = await openAppendingFile(localFilePath)
@@ -71,22 +85,22 @@ async function serveHttp(conn: Deno.Conn) {
             "host",
         ) ?? "Unknown"
 
-        const logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
+        let logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
+
+        if (isProbe) {
+            logEntry = `${logEntry} | <b>PROBE</b>`
+        }
 
         await appendToFiles([appendingFile, PVCFile], logEntry)
         await dbClient.execute(`INSERT INTO entries(data)
-                              values (?)`, [
-            logEntry,
-        ]);
+                                values (?)`, [logEntry,]);
 
         let savedLocal = await readLogFile(localFilePath)
         let savedEmptyDir = await readLogFile(PVCFilePath)
         let dbEntries = await dbClient.query(`select *
-                                            from entries`);
-        console.log('kek', dbEntries)
-
+                                              from entries`);
         let dbEntrieshtml = '';
-        for(const entry of dbEntries) {
+        for (const entry of dbEntries) {
             dbEntrieshtml = `${dbEntrieshtml} <b>Id : </b> ${entry.id} <b>Data : </b> ${entry.data} <b>CreatedAt : </b> ${entry.created_at}<br>`
         }
 
