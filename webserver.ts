@@ -1,8 +1,4 @@
-import {getNetworkAddr} from 'https://deno.land/x/local_ip/mod.ts';
-import {format} from "https://deno.land/std@0.91.0/datetime/mod.ts";
-import {readLines} from "https://deno.land/std/io/bufio.ts";
-import {ensureFileSync,} from "https://deno.land/std@0.78.0/fs/mod.ts";
-import {Client} from "https://deno.land/x/mysql/mod.ts";
+import {Client, format, getNetworkAddr, readLines, ensureFileSync} from './deps.ts'
 // Start listening on port 8080 of localhost.
 const server = Deno.listen({port: 8080});
 
@@ -22,9 +18,8 @@ async function serveHttp(conn: Deno.Conn) {
         username: "root",
         db: "logs",
         password: "asecret",
-    });
+    })
 
-    await dbClient.execute(`CREATE DATABASE IF NOT EXISTS logs`);
     await dbClient.execute(`
         CREATE TABLE IF NOT EXISTS entries
         (
@@ -35,6 +30,7 @@ async function serveHttp(conn: Deno.Conn) {
         ) ENGINE = InnoDB
           DEFAULT CHARSET = utf8;
     `);
+
 
     // This "upgrades" a network connection into an HTTP connection.
     const httpConn = Deno.serveHttp(conn);
@@ -67,7 +63,7 @@ async function serveHttp(conn: Deno.Conn) {
 
         if (url.toString().includes('probe')) {
             isProbe = true
-            probeType = url.searchParams.get('probeType')
+            probeType = url.searchParams.get('probeType') as string
         }
 
         if (url.toString().includes('clean-database')) {
@@ -86,7 +82,7 @@ async function serveHttp(conn: Deno.Conn) {
 
         if (isProbe) {
             logEntry = `${logEntry} | <b>PROBE</b>`
-            if(probeType !== '') {
+            if (probeType !== '') {
                 logEntry = `${logEntry} | : ${probeType}`
             }
         }
@@ -94,18 +90,20 @@ async function serveHttp(conn: Deno.Conn) {
         logEntry = `${logEntry}\n`
 
         await appendToFiles([appendingFile, PVCFile], logEntry)
-        await dbClient.execute(`INSERT INTO entries(data)
-                                values (?)`, [logEntry,]);
+
 
         let savedLocal = await readLogFile(localFilePath)
         let savedEmptyDir = await readLogFile(PVCFilePath)
+        let dbEntrieshtml = '';
+        await dbClient.execute(`INSERT INTO entries(data)
+                                values (?)`, [logEntry,]);
         let dbEntries = await dbClient.query(`select *
                                               from entries`);
-        let dbEntrieshtml = '';
+
         for (const entry of dbEntries) {
             dbEntrieshtml = `${dbEntrieshtml} <b>Id : </b> ${entry.id} <b>Data : </b> ${entry.data} <b>CreatedAt : </b> ${entry.created_at}<br>`
-        }
 
+        }
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
         <h3>Log</h3><br>
@@ -153,4 +151,5 @@ async function readLogFile(path: any) {
     }
 
     return data;
+
 }
