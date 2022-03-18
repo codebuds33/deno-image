@@ -80,11 +80,13 @@ async function serveHttp(conn: Deno.Conn) {
             "host",
         ) ?? "Unknown"
 
-        let logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}\n`
+        let logEntry = `${format(new Date(), "yyyy-MM-dd HH:mm:ss")} - <b>Client</b> : ${client} | <b>Server</b> : ${netAddr} | <b>URL</b> : ${url}`
 
         if (isProbe) {
             logEntry = `${logEntry} | <b>PROBE</b>`
         }
+
+        logEntry = `${logEntry}\n`
 
         await appendToFiles([appendingFile, PVCFile], logEntry)
         await dbClient.execute(`INSERT INTO entries(data)
