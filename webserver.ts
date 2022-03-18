@@ -66,6 +66,7 @@ async function serveHttp(conn: Deno.Conn) {
 
         if (url.toString().includes('probe')) {
             isProbe = true
+            const probeType = url.searchParams.get('probeType')
         }
 
         if (url.toString().includes('clean-database')) {
@@ -84,6 +85,9 @@ async function serveHttp(conn: Deno.Conn) {
 
         if (isProbe) {
             logEntry = `${logEntry} | <b>PROBE</b>`
+            if(probeType) {
+                logEntry = `${logEntry} | : ${probeType}`
+            }
         }
 
         logEntry = `${logEntry}\n`
