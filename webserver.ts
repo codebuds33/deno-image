@@ -43,13 +43,8 @@ async function serveHttp(conn: Deno.Conn) {
     // iterator from the HTTP connection.
     for await (const requestEvent of httpConn) {
 
-
-        const pingSameResponse = Deno.run({cmd: ["ping", "same-namespace"]});
-        const pingOtherResponse = Deno.run({cmd: ["ping", "other-namespace"]});
-
-        console.log(pingSameResponse, pingOtherResponse)
-
         const url = new URL(requestEvent.request.url);
+
         if (url.toString().includes('favicon')) {
             return
         }
