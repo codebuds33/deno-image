@@ -108,13 +108,15 @@ async function serveHttp(conn: Deno.Conn) {
         }
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
-        <h2>Log</h2> <a href="/clean-all"><button>Clean</button></a><br>
-        <h3>PVC</h3> <a href="/clean-pvc"><button>Clean</button></a><br>
+        <b>Logs</b> <a href="/clean-all"><button>Clean All</button></a><br>
+        <div style="margin-left: 4rem">
+        <b>PVC</b> <a href="/clean-pvc"><button>Clean</button></a><br>
         ${savedEmptyDir}
-        <h3>Local</h3> <a href="/clean-local"><button>Clean</button></a><br>
+        <b>Local</b> <a href="/clean-local"><button>Clean</button></a><br>
         ${savedLocal}
-        <h3>DataBase</h3> <a href="/clean-database"><button>Clean</button></a><br>
+        <b>DataBase</b> <a href="/clean-database"><button>Clean</button></a><br>
         ${dbEntrieshtml}
+        </div>
         `;
         const bodyHTML = new TextEncoder().encode(body);
         // The requestEvent's `.respondWith()` method is how we send the response
