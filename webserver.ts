@@ -13,11 +13,18 @@ for await (const conn of server) {
 
 async function serveHttp(conn: Deno.Conn) {
 
+    const MARIADB_HOST = Deno.env.get("MARIADB_HOST") ?? 'maria-db';
+    const MARIADB_DATABASE = Deno.env.get("MARIADB_DATABASE") ?? 'logs';
+    const MARIADB_PASSWORD = Deno.env.get("MARIADB_PASSWORD") ?? 'asecret';
+    const MARIADB_USERNAME = Deno.env.get("MARIADB_USERNAME") ?? 'root';
+
+    console.log(`MariaDB => User : ${MARIADB_USERNAME} | Database : ${MARIADB_DATABASE} | Host : ${MARIADB_HOST}`)
+
     const dbClient = await new Client().connect({
-        hostname: "maria-db",
-        username: "root",
-        db: "logs",
-        password: "asecret",
+        hostname: MARIADB_HOST,
+        username: MARIADB_USERNAME,
+        db: MARIADB_DATABASE,
+        password: MARIADB_PASSWORD,
     })
 
     await dbClient.execute(`
