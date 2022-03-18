@@ -50,12 +50,17 @@ async function serveHttp(conn: Deno.Conn) {
 
         await checkFilesExist([localFilePath, PVCFilePath])
 
-        if (url.toString().includes('clean-pvc')) {
+        if (url.toString().includes('clean-pvc') || url.toString().includes('clean-all')) {
             Deno.writeFile(PVCFilePath, new Uint8Array())
         }
 
-        if (url.toString().includes('clean-local')) {
+        if (url.toString().includes('clean-local') || url.toString().includes('clean-all')) {
             Deno.writeFile(localFilePath, new Uint8Array())
+        }
+
+        if (url.toString().includes('clean-database') || url.toString().includes('clean-all')) {
+            await dbClient.execute(`delete
+                                    from entries`);
         }
 
         let isProbe = false
@@ -66,10 +71,7 @@ async function serveHttp(conn: Deno.Conn) {
             probeType = url.searchParams.get('probeType') as string
         }
 
-        if (url.toString().includes('clean-database')) {
-            await dbClient.execute(`delete
-                                    from entries`);
-        }
+
 
         const appendingFile = await openAppendingFile(localFilePath)
         const PVCFile = await openAppendingFile(PVCFilePath)
@@ -83,7 +85,7 @@ async function serveHttp(conn: Deno.Conn) {
         if (isProbe) {
             logEntry = `${logEntry} | <b>PROBE</b>`
             if (probeType !== '') {
-                logEntry = `${logEntry} | : ${probeType}`
+                logEntry = `${logEntry} : ${probeType}`
             }
         }
 
@@ -106,12 +108,12 @@ async function serveHttp(conn: Deno.Conn) {
         }
         const body = `
         <b>Current</b>: ${logEntry}<br><br>
-        <h3>Log</h3><br>
-         <b>PVC</b> <a href="/clean-pvc"><button>Clean</button></a><br>
+        <h2>Log</h2> <a href="/clean-all"><button>Clean</button></a><br>
+        <h3>PVC</h3> <a href="/clean-pvc"><button>Clean</button></a><br>
         ${savedEmptyDir}
-        <b>Local</b> <a href="/clean-local"><button>Clean</button></a><br>
+        <h3>Local</h3> <a href="/clean-local"><button>Clean</button></a><br>
         ${savedLocal}
-        <b>DataBase</b> <a href="/clean-database"><button>Clean</button></a><br>
+        <h3>DataBase</h3> <a href="/clean-database"><button>Clean</button></a><br>
         ${dbEntrieshtml}
         `;
         const bodyHTML = new TextEncoder().encode(body);
