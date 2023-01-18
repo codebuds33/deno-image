@@ -3,5 +3,16 @@ version: '3.8'
 services:
   deno:
     build: .
+    networks:
+      - maria
+    environment:
+      - MARIADB_HOST=maria
+      - MARIADB_USERNAME=exploit
+      - MARIADB_DATABASE=logs
+      - MARIADB_PASSWORD=exploit
     ports:
       - 8080:8080
+
+networks:
+  maria:
+    external: true

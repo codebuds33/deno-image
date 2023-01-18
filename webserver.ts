@@ -162,5 +162,4 @@ async function readLogFile(path: any) {
     }
 
     return data;
-
 }
