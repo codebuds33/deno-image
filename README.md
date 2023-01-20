@@ -34,6 +34,9 @@ From *1.4.0* onward there is a `/probe` route that accepts the *probeType* param
 
 ## Changelog
 
+- 1.7.0 :
+  - Run as user 82:82
+
 - 1.6.0 :
   - Update to deno 1.29
   - Update dependencies

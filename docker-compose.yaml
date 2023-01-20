@@ -3,6 +3,7 @@ version: '3.8'
 services:
   deno:
     build: .
+    user: 82:82
     networks:
       - maria
     environment:
