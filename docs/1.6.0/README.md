@@ -1,3 +1,3 @@
-# 1.4.0
+# 1.6.0
 
-Add liveliness and readiness probes
+Add 404 response for routes that do not exist

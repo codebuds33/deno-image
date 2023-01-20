@@ -1,4 +1,4 @@
-FROM denoland/deno:alpine-1.18.2
+FROM denoland/deno:alpine-1.29.4
 
 COPY . /srv/app
 

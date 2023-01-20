@@ -1,6 +1,12 @@
-import {Client, format, getNetworkAddr, readLines, ensureFileSync} from './deps.ts'
+import {Client, ensureFileSync, format, getNetworkAddr, readLines} from './deps.ts'
 // Start listening on port 8080 of localhost.
 const server = Deno.listen({port: 8080});
+
+const CLEAN_DATABASE_ROUTE = '/clean-database'
+const CLEAN_LOCAL_ROUTE = '/clean-local'
+const CLEAN_PVC_ROUTE = '/clean-pvc'
+const CLEAN_ALL_ROUTE = '/clean-all'
+const PROBE_ROUTE = '/probe'
 
 console.log(`HTTP webserver running.  Access it at:  http://localhost:8080/`);
 
@@ -47,9 +53,10 @@ async function serveHttp(conn: Deno.Conn) {
     for await (const requestEvent of httpConn) {
 
         const url = new URL(requestEvent.request.url);
+        const urlString = url.pathname;
 
-        if (url.toString().includes('favicon')) {
-            return
+        if (urlString === '/favicon.ico' || urlString === '/favicon') {
+            continue
         }
 
         const localFilePath = './local/log.txt'
@@ -57,28 +64,26 @@ async function serveHttp(conn: Deno.Conn) {
 
         await checkFilesExist([localFilePath, PVCFilePath])
 
-        if (url.toString().includes('clean-pvc') || url.toString().includes('clean-all')) {
-            Deno.writeFile(PVCFilePath, new Uint8Array())
-        }
-
-        if (url.toString().includes('clean-local') || url.toString().includes('clean-all')) {
-            Deno.writeFile(localFilePath, new Uint8Array())
-        }
-
-        if (url.toString().includes('clean-database') || url.toString().includes('clean-all')) {
-            await dbClient.execute(`delete
-                                    from entries`);
-        }
-
         let isProbe = false
         let probeType = ''
 
-        if (url.toString().includes('probe')) {
+        if (urlString === CLEAN_PVC_ROUTE || urlString === CLEAN_ALL_ROUTE) {
+            Deno.writeFile(PVCFilePath, new Uint8Array())
+        } else if (urlString === CLEAN_LOCAL_ROUTE || urlString === CLEAN_ALL_ROUTE) {
+            Deno.writeFile(localFilePath, new Uint8Array())
+        } else if (urlString === CLEAN_DATABASE_ROUTE || urlString === CLEAN_ALL_ROUTE) {
+            await dbClient.execute(`DELETE FROM entries`);
+        } else if (urlString === PROBE_ROUTE) {
             isProbe = true
             probeType = url.searchParams.get('probeType') as string
+        } else if (!(urlString === '' || urlString === '/')) { //If not one of the valid URLS or not the main url return a 404
+            const errorMsg = new TextEncoder().encode('Not found')
+            requestEvent.respondWith(new Response(errorMsg, {
+                    status: 404
+                })
+            )
+            continue
         }
-
-
 
         const appendingFile = await openAppendingFile(localFilePath)
         const PVCFile = await openAppendingFile(PVCFilePath)
@@ -104,10 +109,8 @@ async function serveHttp(conn: Deno.Conn) {
         let savedLocal = await readLogFile(localFilePath)
         let savedEmptyDir = await readLogFile(PVCFilePath)
         let dbEntrieshtml = '';
-        await dbClient.execute(`INSERT INTO entries(data)
-                                values (?)`, [logEntry,]);
-        let dbEntries = await dbClient.query(`select *
-                                              from entries`);
+        await dbClient.execute(`INSERT INTO entries(data) VALUES (?)`, [logEntry,]);
+        let dbEntries = await dbClient.query(`SELECT * FROM entries`);
 
         for (const entry of dbEntries) {
             dbEntrieshtml = `${dbEntrieshtml} <b>Id : </b> ${entry.id} <b>Data : </b> ${entry.data} <b>CreatedAt : </b> ${entry.created_at}<br>`

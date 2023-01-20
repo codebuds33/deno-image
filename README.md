@@ -31,3 +31,10 @@ make sure to have an accessible service running with the correct user rights.
 ## Probes
 
 From *1.4.0* onward there is a `/probe` route that accepts the *probeType* parameter. 
+
+## Changelog
+
+- 1.6.0 :
+  - Update to deno 1.29
+  - Update dependencies
+  - Add 404 error for routes that do not exist
