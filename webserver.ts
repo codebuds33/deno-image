@@ -1,6 +1,6 @@
 import {getNetworkAddr} from 'https://deno.land/x/local_ip/mod.ts';
 import {format} from "https://deno.land/std@0.91.0/datetime/mod.ts";
-import {readLines} from "https://deno.land/std/io/bufio.ts";
+import {readLines} from "https://deno.land/std@0.174.0/io/buffer.ts";
 import {ensureFileSync,} from "https://deno.land/std@0.78.0/fs/mod.ts";
 import {Client} from "https://deno.land/x/mysql/mod.ts";
 // Start listening on port 8080 of localhost.
